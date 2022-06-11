@@ -1,0 +1,3 @@
+/*
+  Memastikan masukan untuk registrasi device adalah benar
+*/
