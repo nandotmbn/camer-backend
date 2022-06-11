@@ -20,7 +20,7 @@ const DataSchema = new mongoose.Schema({
 	},
 	lastUpdate: {
 		type: Date,
-		default: dateIna,
+		default: Date.now
 	},
 });
 

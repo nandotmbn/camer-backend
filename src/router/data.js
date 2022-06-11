@@ -4,18 +4,24 @@ const jwt = require("jsonwebtoken");
 const moment = require("moment");
 const { Data } = require("../models/data");
 const { Device } = require("../models/device");
-const moment_timezone = require('moment-timezone');
+const moment_timezone = require("moment-timezone");
 
 router.get("/:id", async (req, res) => {
 	const result = await Device.findById(req.params.id);
 	if (!result) return res.status(404).send({ message: "Device is not found" });
 
 	if (req.query.date) {
-		const splitDate = req.query.date.split('-')
-		const date = parseInt(splitDate[2]) + 1
+		const splitDate = req.query.date.split("-");
+		const date = parseInt(splitDate[2]) + 1;
 		const dataResult = await Data.find({
 			deviceId: result._id,
-			lastUpdate: { $gte: req.query.date, $lte: `${splitDate[0]}-${splitDate[1]}-${date}` },
+			lastUpdate: {
+				$gte: moment_timezone.tz(req.query.date, "Asia/Bangkok"),
+				$lte: moment_timezone.tz(
+					`${splitDate[0]}-${splitDate[1]}-${date}`,
+					"Asia/Bangkok"
+				),
+			},
 		});
 
 		return res.send({ ...result._doc, data: dataResult });
@@ -43,22 +49,25 @@ router.post("/:id", async (req, res) => {
 	const result = await Device.findById(req.params.id);
 	if (!result) return res.status(404).send("NOT FOUND");
 
-	const dateIna = moment_timezone.tz(Date.now(), "Asia/Bangkok");
-
 	const dataResult = await new Data({
 		deviceId: result._id,
 		water: req.body.water,
 		electric: req.body.electric,
-		lastUpdate: dateIna
 	}).save();
 
-	const dateNow = moment(Date.now()).format("YYYY-MM-DD")
-	const splitDate = dateNow.split("-")
-	const date = parseInt(splitDate[2]) + 1
+	const dateNow = moment(Date.now()).format("YYYY-MM-DD");
+	const splitDate = dateNow.split("-");
+	const date = parseInt(splitDate[2]) + 1;
 
 	const currentResult = await Data.find({
 		deviceId: result._id,
-		lastUpdate: { $gte: dateNow, $lte: `${splitDate[0]}-${splitDate[1]}-${date}` }
+		lastUpdate: {
+			$gte: moment_timezone.tz(dateNow, "Asia/Bangkok"),
+			$lte: moment_timezone.tz(
+				`${splitDate[0]}-${splitDate[1]}-${date}`,
+				"Asia/Bangkok"
+			),
+		},
 	});
 
 	const ioEmitter = req.app.get("socketIo");
@@ -71,13 +80,10 @@ router.delete("/:id", async (req, res) => {
 	const result = await Data.deleteMany({ deviceId: req.params.id });
 	if (!result) return res.status(404).send("NOT FOUND");
 
-	const dateIna = moment_timezone.tz(Date.now(), "Asia/Bangkok");
-
 	const dataResult = await new Data({
 		deviceId: req.params.id,
 		water: 0,
 		electric: 0,
-		lastUpdate: dateIna
 	}).save();
 
 	res.send(dataResult);
