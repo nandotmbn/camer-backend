@@ -6,8 +6,8 @@ const cors = require("cors");
 module.exports = function (app, io) {
 	mongoose
 		.connect(
-			// "mongodb+srv://orlandosykes:orlandosykes@technorcluster.0ayow.mongodb.net/GPSTracker?retryWrites=true&w=majority"
-			"mongodb://localhost/WaterAndElectric"
+			"mongodb+srv://rizky:rizky@rizkycluster.g4el38t.mongodb.net/Camer?retryWrites=true&w=majority"
+			// "mongodb://localhost/WaterAndElectric"
 		)
 		.then(() => console.log("Connected to MongoDB"))
 		.catch((e) => {
