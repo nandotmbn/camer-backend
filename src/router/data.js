@@ -13,6 +13,13 @@ router.get("/:id", async (req, res) => {
 	if (req.query.date) {
 		const splitDate = req.query.date.split("-");
 		const date = parseInt(splitDate[2]) + 1;
+		console.log({
+			$gte: moment_timezone.tz(req.query.date, "Asia/Bangkok"),
+			$lte: moment_timezone.tz(
+				`${splitDate[0]}-${splitDate[1]}-${date}`,
+				"Asia/Bangkok"
+			),
+		});
 		const dataResult = await Data.find({
 			deviceId: result._id,
 			lastUpdate: {
@@ -55,9 +62,17 @@ router.post("/:id", async (req, res) => {
 		electric: req.body.electric,
 	}).save();
 
-	const dateNow = moment(Date.now()).format("YYYY-MM-DD");
+	const dateNow = moment(moment_timezone.tz(Date.now(), "Asia/Bangkok")).format("YYYY-MM-DD");
 	const splitDate = dateNow.split("-");
 	const date = parseInt(splitDate[2]) + 1;
+
+	console.log({
+		$gte: moment_timezone.tz(dateNow, "Asia/Bangkok"),
+		$lte: moment_timezone.tz(
+			`${splitDate[0]}-${splitDate[1]}-${date}`,
+			"Asia/Bangkok"
+		),
+	})
 
 	const currentResult = await Data.find({
 		deviceId: result._id,
