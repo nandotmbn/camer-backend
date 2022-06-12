@@ -32,7 +32,11 @@ router.get("/:id", async (req, res) => {
 			lastUpdate: moment_timezone.tz(Date.now(), "Asia/Jakarta"),
 		};
 
-		for (let i = 0; i < 23; i++) {
+		const lastHour = moment_timezone
+			.tz(dataResult[dataResult.length - 1].lastUpdate, "Asia/Jakarta")
+			.format("HH");
+
+		for (let i = 0; i <= parseInt(lastHour); i++) {
 			dataResult.forEach((e) => {
 				const hour = moment_timezone
 					.tz(e.lastUpdate, "Asia/Jakarta")
@@ -81,7 +85,11 @@ router.get("/:id", async (req, res) => {
 		lastUpdate: moment_timezone.tz(Date.now(), "Asia/Jakarta"),
 	};
 
-	for (let i = 0; i < 23; i++) {
+	const lastHour = moment_timezone
+		.tz(dataResult[dataResult.length - 1].lastUpdate, "Asia/Jakarta")
+		.format("HH");
+
+	for (let i = 0; i <= parseInt(lastHour); i++) {
 		dataResult.forEach((e) => {
 			const hour = moment_timezone
 				.tz(e.lastUpdate, "Asia/Jakarta")
@@ -156,6 +164,10 @@ router.post("/:id", async (req, res) => {
 		},
 	});
 
+	const lastHour = moment_timezone
+		.tz(currentResult[currentResult.length - 1].lastUpdate, "Asia/Jakarta")
+		.format("HH");
+
 	let dataBuilt = [];
 	let previousData = {
 		hour: 0,
@@ -164,7 +176,7 @@ router.post("/:id", async (req, res) => {
 		lastUpdate: moment_timezone.tz(Date.now(), "Asia/Jakarta"),
 	};
 
-	for (let i = 0; i < 23; i++) {
+	for (let i = 0; i <= parseInt(lastHour); i++) {
 		currentResult.forEach((e) => {
 			const hour = moment_timezone
 				.tz(e.lastUpdate, "Asia/Jakarta")
