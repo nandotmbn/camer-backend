@@ -24,14 +24,98 @@ router.get("/:id", async (req, res) => {
 			},
 		});
 
-		return res.send({ ...result._doc, data: dataResult });
+		let dataBuilt = [];
+		let previousData = {
+			hour: 0,
+			water: 0,
+			electric: 0,
+			lastUpdate: moment_timezone.tz(Date.now(), "Asia/Jakarta"),
+		};
+
+		for (let i = 0; i < 23; i++) {
+			dataResult.forEach((e) => {
+				const hour = moment_timezone
+					.tz(e.lastUpdate, "Asia/Jakarta")
+					.format("HH");
+				if (hour == i) {
+					const dataWillWrap = {
+						i,
+						water: e.water + previousData.water,
+						electric: e.electric + previousData.electric,
+						lastUpdate: e.lastUpdate,
+					};
+					return (previousData = dataWillWrap);
+				}
+
+				const dataWillWrap = {
+					i,
+					water: 0 + previousData.water,
+					electric: 0 + previousData.electric,
+					lastUpdate: 0,
+				};
+				return (previousData = dataWillWrap);
+			});
+
+			dataBuilt.push(previousData);
+
+			previousData = {
+				hour: i + 1,
+				water: 0,
+				electric: 0,
+				lastUpdate: moment_timezone.tz(Date.now(), "Asia/Jakarta"),
+			};
+		}
+
+		return res.send({ ...result._doc, data: dataBuilt });
 	}
 
 	const dataResult = await Data.find({
 		deviceId: result._id,
 	});
 
-	res.send({ ...result._doc, data: dataResult });
+	let dataBuilt = [];
+	let previousData = {
+		hour: 0,
+		water: 0,
+		electric: 0,
+		lastUpdate: moment_timezone.tz(Date.now(), "Asia/Jakarta"),
+	};
+
+	for (let i = 0; i < 23; i++) {
+		dataResult.forEach((e) => {
+			const hour = moment_timezone
+				.tz(e.lastUpdate, "Asia/Jakarta")
+				.format("HH");
+			if (hour == i) {
+				const dataWillWrap = {
+					i,
+					water: e.water + previousData.water,
+					electric: e.electric + previousData.electric,
+					lastUpdate: e.lastUpdate,
+				};
+				return (previousData = dataWillWrap);
+			}
+
+			const dataWillWrap = {
+				i,
+				water: 0 + previousData.water,
+				electric: 0 + previousData.electric,
+				lastUpdate: 0,
+			};
+			return (previousData = dataWillWrap);
+		});
+
+		dataBuilt.push(previousData);
+
+		previousData = {
+			hour: i + 1,
+			water: 0,
+			electric: 0,
+			lastUpdate: moment_timezone.tz(Date.now(), "Asia/Jakarta"),
+		};
+	}
+
+	res.send({ ...result._doc, data: dataBuilt });
 });
 
 router.get("/:id/last", async (req, res) => {
@@ -71,13 +155,6 @@ router.post("/:id", async (req, res) => {
 			),
 		},
 	});
-
-	// const h = {
-	// 	hour: 0,
-	// 	water: 0,
-	// 	electric: 0,
-	// 	lastUpdate: "2022-06-11T18:45:42.699Z",
-	// };
 
 	let dataBuilt = [];
 	let previousData = {
