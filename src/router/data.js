@@ -13,13 +13,6 @@ router.get("/:id", async (req, res) => {
 	if (req.query.date) {
 		const splitDate = req.query.date.split("-");
 		const date = parseInt(splitDate[2]) + 1;
-		console.log({
-			$gte: moment_timezone.tz(req.query.date, "Asia/Bangkok"),
-			$lte: moment_timezone.tz(
-				`${splitDate[0]}-${splitDate[1]}-${date}`,
-				"Asia/Bangkok"
-			),
-		});
 		const dataResult = await Data.find({
 			deviceId: result._id,
 			lastUpdate: {
@@ -62,17 +55,11 @@ router.post("/:id", async (req, res) => {
 		electric: req.body.electric,
 	}).save();
 
-	const dateNow = moment(moment_timezone.tz(Date.now(), "Asia/Bangkok")).format("YYYY-MM-DD");
+	const dateNow = moment(moment_timezone.tz(Date.now(), "Asia/Bangkok")).format(
+		"YYYY-MM-DD"
+	);
 	const splitDate = dateNow.split("-");
 	const date = parseInt(splitDate[2]) + 1;
-
-	console.log({
-		$gte: moment_timezone.tz(dateNow, "Asia/Bangkok"),
-		$lte: moment_timezone.tz(
-			`${splitDate[0]}-${splitDate[1]}-${date}`,
-			"Asia/Bangkok"
-		),
-	})
 
 	const currentResult = await Data.find({
 		deviceId: result._id,
@@ -85,10 +72,59 @@ router.post("/:id", async (req, res) => {
 		},
 	});
 
-	const ioEmitter = req.app.get("socketIo");
-	ioEmitter.emit(req.params.id, { ...result._doc, data: currentResult });
+	// const h = {
+	// 	hour: 0,
+	// 	water: 0,
+	// 	electric: 0,
+	// 	lastUpdate: "2022-06-11T18:45:42.699Z",
+	// };
 
-	res.send({ ...result._doc, data: currentResult });
+	let dataBuilt = [];
+	let previousData = {
+		hour: 0,
+		water: 0,
+		electric: 0,
+		lastUpdate: moment_timezone.tz(Date.now(), "Asia/Jakarta"),
+	};
+
+	for (let i = 0; i < 23; i++) {
+		currentResult.forEach((e) => {
+			const hour = moment_timezone
+				.tz(e.lastUpdate, "Asia/Jakarta")
+				.format("HH");
+			if (hour == i) {
+				const dataWillWrap = {
+					i,
+					water: e.water + previousData.water,
+					electric: e.electric + previousData.electric,
+					lastUpdate: e.lastUpdate,
+				};
+				return (previousData = dataWillWrap);
+			}
+
+			const dataWillWrap = {
+				i,
+				water: 0 + previousData.water,
+				electric: 0 + previousData.electric,
+				lastUpdate: 0,
+			};
+			return (previousData = dataWillWrap);
+		});
+
+		dataBuilt.push(previousData);
+
+		previousData = {
+			hour: i + 1,
+			water: 0,
+			electric: 0,
+			lastUpdate: moment_timezone.tz(Date.now(), "Asia/Jakarta"),
+		};
+	}
+
+	const ioEmitter = req.app.get("socketIo");
+	ioEmitter.emit(req.params.id, { ...result._doc, data: dataBuilt });
+
+	res.send({ ...result._doc, data: dataBuilt });
 });
 
 router.delete("/:id", async (req, res) => {
