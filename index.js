@@ -15,6 +15,7 @@ WebSocket(io);
 
 app.use("/device", require('./src/router/device'))
 app.use("/data", require('./src/router/data'))
+app.use("/bill", require('./src/router/bill'))
 
 app.use(error);
 const PORT = process.env.PORT || 8888;
