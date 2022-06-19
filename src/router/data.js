@@ -238,7 +238,9 @@ router.post("/:id", async (req, res) => {
 		electric += parseFloat(e.electric)
 	})
 
-	ioEmitter.emit("bill" + req.params.id, {
+	const timeKey = moment_timezone.tz(`${splitDate[0]}-${splitDate[1]}-01`, "Asia/Bangkok").format("YYYY-MM")
+
+	ioEmitter.emit("bill" + timeKey + req.params.id, {
 		water, electric
 	});
 
