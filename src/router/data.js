@@ -5,6 +5,8 @@ const moment = require("moment");
 const { Data } = require("../models/data");
 const { Device } = require("../models/device");
 const moment_timezone = require("moment-timezone");
+const lastDateOfMonth = require("../helpers/lastDateOfMonth");
+
 
 router.get("/:id", async (req, res) => {
 	const result = await Device.findById(req.params.id);
@@ -212,6 +214,33 @@ router.post("/:id", async (req, res) => {
 
 	const ioEmitter = req.app.get("socketIo");
 	ioEmitter.emit(req.params.id, { ...result._doc, data: dataBuilt });
+
+	const splitDateBill = moment(Date.now()).format("YYYY-MM-01").split("-");
+	const month = parseInt(splitDateBill[1]);
+	const isLeap = parseInt(splitDateBill[0]) % 4 == 0 ? true : false
+
+	const dataResultBill = await Data.find({
+		deviceId: result._id,
+		lastUpdate: {
+			$gte: moment_timezone.tz(`${splitDate[0]}-${splitDate[1]}-01`, "Asia/Bangkok"),
+			$lte: moment_timezone.tz(
+				`${splitDateBill[0]}-${splitDateBill[1]}-${lastDateOfMonth(isLeap, month)}`,
+				"Asia/Bangkok"
+			),
+		},
+	});
+
+	let water = 0;
+	let electric = 0;
+
+	dataResultBill.forEach((e, i) => {
+		water += parseFloat(e.water)
+		electric += parseFloat(e.electric)
+	})
+
+	ioEmitter.emit("bill" + req.params.id, {
+		water, electric
+	});
 
 	res.send({ ...result._doc, data: dataBuilt });
 });
